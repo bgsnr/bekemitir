@@ -1,10 +1,19 @@
 {
   "name": "bekemitir",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "worker": "bun run src/worker.ts",
+    "migrate": "bun run src/db/migrate.ts",
+    "seed": "bun run src/db/seed.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test"
   },
   "dependencies": {
-    "hono": "^4.13.13"
+    "@hono/zod-validator": "^0.9.1",
+    "aws4fetch": "^1.0.20",
+    "hono": "^4.13.13",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/bun": "latest"

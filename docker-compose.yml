@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: bekemitir-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kemitir}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-bekemitir}
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "shared_buffers=256MB"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kemitir} -d ${POSTGRES_DB:-bekemitir}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bekemitir-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DB_PROVIDER: postgres
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    command: ["bun", "run", "src/index.ts"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bekemitir-worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DB_PROVIDER: postgres
+    command: ["bun", "run", "src/worker.ts"]
+
+volumes:
+  pgdata:
